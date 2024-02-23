@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
+import os
 import subprocess
 import tkinter as tk
 from tkinter import filedialog, scrolledtext
+from pathlib import Path
 
 class App(tk.Tk):
     def __init__(self):
@@ -43,7 +45,8 @@ class App(tk.Tk):
 
     def start_process(self, test_run=False):
         file_limit = test_run and "100" or ""
-        p = subprocess.Popen(['./bin/ReadCVRStats', self.folder_path, "", file_limit], 
+        command_path = os.path.join(os.path.dirname(__file__), 'bin', 'ReadCVRStats')
+        p = subprocess.Popen([command_path, self.folder_path, "", file_limit], 
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
