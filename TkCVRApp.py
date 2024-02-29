@@ -4,7 +4,7 @@ import os
 import subprocess
 from signal import SIGINT
 import tkinter as tk
-from tkinter import filedialog, scrolledtext
+from tkinter import filedialog, scrolledtext, StringVar
 from pathlib import Path
 import tkinter.ttk as ttk
 from tkinter.ttk import *
@@ -32,8 +32,10 @@ class SyncProcessAndText():
             if self.process:
                 while self.process.poll() is None:
                     self.app.update_idletasks()
-                    self.process_output()
-                    self.app.after(50, self.process_check)
+                    out_count = 0
+                    while self.process_output() and out_count < 1:
+                        out_count += 1
+                    self.app.after(10, self.process_check)
                     yield
                 # process is done
                 self.finished_process()
@@ -49,22 +51,23 @@ class SyncProcessAndText():
     def process_output(self):
         i = 0
         done = False
-        while i < 100: # limit to 100 characters at a time
+        while i < 250: # limit to 100 characters at a time
             out = self.process.stdout.read(1)
+            self.app.update_idletasks() # update the UI
             if out:
                 self.log_area.insert(tk.END, out)
-                self.log_area.see(tk.END)
-                self.app.update_idletasks() # update the UI
             else:
                 done = True
                 break
             i+=1
+        self.log_area.see(tk.END)
+        self.app.update_idletasks() # update the UI
         return done
 
     def process_check(self):
         if self.process_gen:
             # update the UI
-            self.app.update_idletasks()
+            self.app.update()
             # run the generator
             try:
                 next(self.process_gen)
@@ -104,59 +107,84 @@ class App(tk.Tk):
 
         self.geometry("900x700")
 
-        ttk.Style().configure("TButton", padding=6, relief="flat", background="#ccc")
+        self.style = ttk.Style()
+        self.style.configure("TButton", padding=6, relief="flat", background="#ccc", font=("Arial", 12))
+        self.style.configure("Highlight.TButton", padding=6, relief="flat", background="#88d0ee")
+        self.style.configure("Delete.TButton", padding=6, relief="flat", background="#e99")
+        self.style.configure("HighlightOption", padding=6, relief="flat", background="#ccc")
+        self.style.configure("Highlight.TLabel", padding=6, relief="flat", background="#88d0ee", font=("Arial", 12))
+
+        print(self.style.layout("TButton"))
 
         # internal variables
         self.folder_path = None
 
         # frame around top controls
-        self.top_frame = tk.Frame(self, height=200, borderwidth=2, relief="groove")
+        self.top_frame = Frame(self, height=200, borderwidth=2, relief="groove")
 
         # Select File Type Step
-        self.file_type_label = tk.Label(self.top_frame, text="Select File Type")
+        self.file_type_label = Label(self.top_frame, text="1) Select File Type: ", style="Highlight.TLabel")
         self.file_type_label.pack(pady=5, side="left")
 
         # Create a Tkinter variable for File Type
-        self.file_type_var = tk.StringVar(self)
+        self.file_type_var = StringVar(self)
         self.file_type_var.set("singlecvr") # default value
 
         # Create a Tkinter option menu for Single CVR File or CVR Report File
-        self.file_type_menu = tk.OptionMenu(self.top_frame, self.file_type_var, "singlecvr", "cvrreport")
+        self.file_type_menu = OptionMenu(self.top_frame, self.file_type_var, "Select Type", "singlecvr", "cvrreport")
+
+        #self.file_type_menu.set_style(".HighligtOption")
         self.file_type_menu.pack(pady=5, side="left")
+        self.file_type_var.set("singlecvr")
 
         # Choose CVR Folder Step
-        self.folder_chooser = tk.Button(self.top_frame, text="Choose CVRs Folder", command=self.choose_folder)
-        self.folder_chooser.pack(pady=10, side="bottom")
+        self.folder_chooser = Button(self.top_frame, text="2) Choose CVRs Folder", command=self.choose_folder, style="Highlight.TButton")
+        self.folder_chooser.pack(pady=10, side="top")
 
-        self.folder_path_label = tk.Label(self.top_frame, text="No folder selected")
-        self.folder_path_label.pack(pady=10, side="bottom")
+        self.folder_path_label = Label(self.top_frame, text="No folder selected")
+        self.folder_path_label.pack(pady=10, side="top")
 
         self.top_frame.pack(fill="x")
 
-        self.process_control_frame = tk.Frame(self, width=200, borderwidth=2, relief="groove")
+        self.process_control_frame = Frame(self, width=200, borderwidth=2, relief="groove")
 
-        self.process_status_label = tk.Label(self.process_control_frame, text="Process Status: Not Started")
+        self.process_status_label = Label(self.process_control_frame, text="Process Status: Not Started")
         self.process_status_label.pack(pady=20)
 
-        self.test_run_btn = tk.Button(self.process_control_frame, text="Test Run (100 CVRs)", command=self.test_run_process)
+        self.test_run_btn = Button(self.process_control_frame, text="Test Run (100 CVRs)", command=self.test_run_process, style="Highlight.TButton")
         self.test_run_btn.pack(pady=5)
 
-        self.start_btn = tk.Button(self.process_control_frame, text="Process Folder", command=self.start_process)
+        self.start_btn = Button(self.process_control_frame, text="Process Folder", command=self.start_process, style="Highlight.TButton")
         self.start_btn.pack(pady=5)
 
-        self.cancel_btn = tk.Button(self.process_control_frame, text="Cancel Process", command=self.cancel_process)
+        self.cancel_btn = Button(self.process_control_frame, text="Cancel Process", command=self.cancel_process, style="Delete.TButton")
         self.cancel_btn.pack(pady=5)
 
         self.process_control_frame.pack(padx=20, pady=20, side="left", anchor="nw")
 
-        self.log_area_label = tk.Label(self, text="Process Log:")
+        # -------
+        self.log_area_label = Label(self, text="Process Log:")
         self.log_area_label.pack(pady=5)
 
-        self.log_area = scrolledtext.ScrolledText(self, height=30, width=80, wrap="word")
-        self.log_area.pack(expand=True, fill="both")
 
-        self.clear_log_btn = tk.Button(self, text="Clear Log", command=self.clear_log)
-        self.clear_log_btn.pack(pady=5, side="bottom")
+        self.log_frame = Frame(self)
+        self.log_frame.pack(fill="both", expand=True)
+
+
+        self.log_area = tk.Text(self.log_frame, wrap="word")
+        vsb = Scrollbar(self.log_frame, command=self.log_area.yview, orient="vertical")
+        self.log_area.configure(yscrollcommand=vsb.set) #, xscrollcommand=hsb.set)
+
+        self.log_frame.grid_rowconfigure(0, weight=1)
+        self.log_frame.grid_columnconfigure(0, weight=1)
+
+        vsb.grid(row=0, column=1, sticky="ns")
+        self.log_area.grid(row=0, column=0, sticky="nsew")
+
+        self.clear_log_btn = Button(self.log_frame, text="Clear Log", command=self.clear_log, style="Delete.TButton")
+        self.clear_log_btn.grid(row=1, column=0, pady=5, sticky="s")
+
+        # --------
         
         self.sync_proc_text = SyncProcessAndText(self, self.log_area, self.finished_process)
 
