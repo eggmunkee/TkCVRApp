@@ -14,7 +14,17 @@
 
 The binaries are not source controlled but taken from release binaries in the read-xml-cvr-stats-export repository.
 
-### Linux Mint install steps
+## Install Python for Windows
+The python installer for Windows is found below at the python website.
+
+[Python Installs for Windows](https://www.python.org/downloads/windows/)
+
+## Install Python for Mac OS
+The python installer for Mac OS is found below at the python website.
+
+[Python Installs for Mac](https://www.python.org/downloads/macos/)
+
+### Install Python3 on Linux Mint for example:
 
 Rough python3 dependencies install steps
 
