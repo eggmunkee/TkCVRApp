@@ -8,6 +8,8 @@
 
 * The process output is shown in the log area.
 
+![TkCVRApp Window](docs/img/tkcvrapp_screenshot.png)
+
 ## Releases include the ReadCVRStats binary in the bin folder
 
 The binaries are not source controlled but taken from release binaries in the read-xml-cvr-stats-export repository.

@@ -108,11 +108,12 @@ class App(tk.Tk):
         self.geometry("900x700")
 
         self.style = ttk.Style()
-        self.style.configure("TButton", padding=6, relief="flat", background="#ccc", font=("Arial", 12))
+        self.style.configure("TButton", padding=6, relief="flat", background="#ccc", font=("Arial", 11, "bold"))
         self.style.configure("Highlight.TButton", padding=6, relief="flat", background="#88d0ee")
         self.style.configure("Delete.TButton", padding=6, relief="flat", background="#e99")
         self.style.configure("HighlightOption", padding=6, relief="flat", background="#ccc")
-        self.style.configure("Highlight.TLabel", padding=6, relief="flat", background="#88d0ee", font=("Arial", 12))
+        self.style.configure("KeyInformation.TLabel", padding=6, relief="flat", background="#88eed0", font=("Arial", 11, "bold"))
+        self.style.configure("Highlight.TLabel", padding=6, relief="flat", background="#88d0ee", font=("Arial", 11, "bold"))
 
         print(self.style.layout("TButton"))
 
@@ -141,10 +142,14 @@ class App(tk.Tk):
         self.folder_chooser = Button(self.top_frame, text="2) Choose CVRs Folder", command=self.choose_folder, style="Highlight.TButton")
         self.folder_chooser.pack(pady=10, side="top")
 
-        self.folder_path_label = Label(self.top_frame, text="No folder selected")
-        self.folder_path_label.pack(pady=10, side="top")
-
         self.top_frame.pack(fill="x")
+
+        self.folder_path_bar = Frame(self, borderwidth=1, relief="raised")
+
+        self.folder_path_label = Label(self.folder_path_bar, text="No folder selected", style="KeyInformation.TLabel")
+        self.folder_path_label.pack(pady=3, side="left", fill="x", expand=True)
+        self.folder_path_bar.pack(fill="x")
+
 
         self.process_control_frame = Frame(self, width=200, borderwidth=2, relief="groove")
 
